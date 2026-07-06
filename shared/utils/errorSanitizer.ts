@@ -94,5 +94,18 @@ export function sanitizeErrorMessage(error: unknown): string {
     mapping.keywords.some((keyword) => normalized.includes(keyword))
   );
 
-  return match ? match.message : DEFAULT_ERROR_MESSAGE;
+  if (match) {
+    return match.message;
+  }
+
+  // If no match is found, check if there is an error message from backend (Axios response data)
+  if (error && typeof error === "object") {
+    const axiosErr = error as AxiosError<{ detail?: unknown; message?: unknown }>;
+    const apiMessage = axiosErr.response?.data?.detail || axiosErr.response?.data?.message;
+    if (typeof apiMessage === "string" && apiMessage !== "" && apiMessage !== "null") {
+      return apiMessage;
+    }
+  }
+
+  return DEFAULT_ERROR_MESSAGE;
 }
